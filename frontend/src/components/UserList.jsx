@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import EditUser from './EditUser'; // Import component Sửa
+import EditUser from './EditUser.jsx'; // Import component Sửa
 
 const UserList = () => {
     const [users, setUsers] = useState([]);
