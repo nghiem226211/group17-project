@@ -1,28 +1,26 @@
 {
-  "name": "group1-project",
+  "name": "group17-project",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "start": "node backend/server.js",
-    "dev": "nodemon backend/server.js"
+    "dev": "nodemon backend/server.js"  
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nghiem226211/group1-project.git"
+    "url": "git+https://github.com/nghiem226211/group17-project.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/nghiem226211/group1-project/issues"
+    "url": "https://github.com/nghiem226211/group17-project/issues"
   },
-  "homepage": "https://github.com/nghiem226211/group1-project#readme",
+  "homepage": "https://github.com/nghiem226211/group17-project#readme",
   "dependencies": {
-    "bcryptjs": "^3.0.3",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
-    "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.19.3",
     "nodemon": "^3.1.10"
   }

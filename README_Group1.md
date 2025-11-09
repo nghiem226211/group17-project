@@ -1,6 +1,7 @@
 MÔ TẨ VAI TRÒ CỦA TỪNG THÀNH VIÊN
 BACKEND: 
 - Họ và tên: Nguyễn Trọng Nghiêm
+- mssv: 226211
 - nghiệm vụ: xây dựng phần backend bằng node.js và express
 - công việc:
 + tạo server express 
@@ -8,6 +9,9 @@ BACKEND:
 + kết nối với MongoDB
 + kiểm thử bằng postman
 FRONTEND: 
+họ và tên: Phạm Phước Thành  
+- mssv: 226712                      
+- công việc: 
 họ và tên: Phạm Phước Thành
 nhiệm vụ: xây dựng giao diện bằng React
 -công việc: 
@@ -16,6 +20,10 @@ nhiệm vụ: xây dựng giao diện bằng React
 + kết nối API từ backend
 DATABASE:
 - họ và tên: trịnh Quang Sang
+- mssv: 221344
+- nhiệm vụ: thế kế và quản lý cơ sở dử liệu mongoDB
+- công việc:
++ thiết kế schema
 nhiệm vụ: thế kế và quản lý cơ sở dử liệu mongoDB
 -công việc:
 +thiết kế schema
