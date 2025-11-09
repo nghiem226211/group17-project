@@ -11,6 +11,7 @@ app.use(express.json());
 
 // 3. Import routes
 const userRoutes = require('./routes/user');
+const authRoutes = require('./routes/auth');
 
 // --- KẾT NỐI MONGO ATLAS ---
 const MONGO_URI = process.env.MONGO_URI;
@@ -31,7 +32,8 @@ mongoose.connect(DB_URL_WITH_NAME)
         console.log('🔗 Connected to MongoDB Atlas!');
         
         // 4. Dùng route
-        app.use('/users', userRoutes); 
+        app.use('/users', userRoutes);
+        app.use('/auth', authRoutes); 
 
         // 5. Khởi động server (CHỈ SAU KHI KẾT NỐI DB)
         const PORT = process.env.PORT || 3000;

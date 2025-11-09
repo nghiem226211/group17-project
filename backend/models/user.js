@@ -13,6 +13,14 @@ const userSchema = new mongoose.Schema({
         required: true,
         unique: true 
     },
+    password: {
+        type: String,
+        required: true // Bắt buộc phải có mật khẩu
+    },
+    role: {
+        type: String,
+        default: 'User' // Mặc định là 'User' [cite: 18, 29]
+    }
 }, { timestamps: true }); 
 
 // Tạo Model từ Schema
