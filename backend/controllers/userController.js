@@ -1,7 +1,7 @@
 // backend/controllers/userController.js
 
 // 1. Nhúng Model User (kết nối với MongoDB)
-const User = require('../models/User'); 
+const User = require('../models/user'); 
 
 // GET: Lấy toàn bộ danh sách user (từ MongoDB)
 exports.getUsers = async (req, res) => { // CHỌN 'exports.getUsers'

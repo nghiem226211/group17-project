@@ -19,12 +19,12 @@ const userSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        default: 'User' // Mặc định là 'User' [cite: 18, 29]
+        default: 'user' // Mặc định là 'User' [cite: 18, 29]
     }
 }, { timestamps: true }); 
 
 // Tạo Model từ Schema
-const User = mongoose.models.User || mongoose.model('User', userSchema);
+const User = mongoose.models.User || mongoose.model('user', userSchema);
 
 // Xuất Model
 module.exports = User;

@@ -16,6 +16,6 @@ const userSchema = new mongoose.Schema({
 }, { timestamps: true }); // Tự động thêm createdAt và updatedAt
 
 // Tạo Model từ Schema
-const User = mongoose.model('User', userSchema);
+const User = mongoose.model('user', userSchema);
 
 module.exports = User;
