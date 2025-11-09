@@ -1,6 +1,6 @@
 // backend/server.js
 
-<// backend/server.js - PHẦN CODE ĐÃ GIẢI QUYẾT
+// backend/server.js - PHẦN CODE ĐÃ GIẢI QUYẾT
 
 // 1. Nhúng thư viện
 require('dotenv').config(); 
@@ -55,11 +55,4 @@ mongoose.connect(DB_URL_WITH_NAME)
         // KẾT NỐI THẤT BẠI
         console.error('❌ Connection failed!', error.message);
     });
-        app.listen(PORT, () => {
-            console.log(`✅ Server running on http://localhost:${PORT}`);
-        });
-    })
-    .catch((error) => {
-        // KẾT NỐI THẤT BẠI
-        console.error('❌ Connection failed!', error.message);
-    });
+
