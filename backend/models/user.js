@@ -2,7 +2,7 @@
 
 const mongoose = require('mongoose');
 
-// Định nghĩa Schema (cấu trúc bảng) theo yêu cầu HĐ 5
+// Định nghĩa Schema (cấu trúc bảng)
 const userSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -11,12 +11,20 @@ const userSchema = new mongoose.Schema({
     email: {
         type: String,
         required: true,
-        unique: true // Đảm bảo email không trùng lặp
+        unique: true 
     },
-}, { timestamps: true }); // Tự động thêm createdAt và updatedAt
+    password: {
+        type: String,
+        required: true // Bắt buộc phải có mật khẩu
+    },
+    role: {
+        type: String,
+        default: 'User' // Mặc định là 'User' [cite: 18, 29]
+    }
+}, { timestamps: true }); 
 
 // Tạo Model từ Schema
 const User = mongoose.model('User', userSchema);
 
-// Xuất Model để userController.js có thể sử dụng
+// Xuất Model
 module.exports = User;

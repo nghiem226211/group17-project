@@ -12,6 +12,9 @@ FRONTEND:
 họ và tên: Phạm Phước Thành  
 - mssv: 226712                      
 - công việc: 
+họ và tên: Phạm Phước Thành
+nhiệm vụ: xây dựng giao diện bằng React
+-công việc: 
 + tạo cấu trúc project react
 + xây dụng component UI
 + kết nối API từ backend
@@ -21,5 +24,8 @@ DATABASE:
 - nhiệm vụ: thế kế và quản lý cơ sở dử liệu mongoDB
 - công việc:
 + thiết kế schema
+nhiệm vụ: thế kế và quản lý cơ sở dử liệu mongoDB
+-công việc:
++thiết kế schema
 + quản lý dữ liệu (CRUD)
 + kết nối và hỗ trợ backend

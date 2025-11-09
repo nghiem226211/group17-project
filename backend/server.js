@@ -1,52 +1,65 @@
 // backend/server.js
 
-// 1. Nhúng thư viện dotenv và mongoose
-require('dotenv').config(); // Đảm bảo gọi ở đầu để đọc biến môi trường (.env)
+<// backend/server.js - PHẦN CODE ĐÃ GIẢI QUYẾT
 
+// 1. Nhúng thư viện
+require('dotenv').config(); 
 const express = require('express');
-const mongoose = require('mongoose'); // Thêm mongoose
+const mongoose = require('mongoose');
+const cors = require('cors'); // <--- Giữ lại CORS từ main nếu có
 const app = express();
 
-// Middleware để đọc JSON
+// 2. Middleware
 app.use(express.json());
+app.use(cors()); // <--- Giữ lại CORS từ main nếu có
 
-// 🧩 Import routes
+// 3. Import routes
 const userRoutes = require('./routes/user');
+const authRoutes = require('./routes/auth'); // <--- QUAN TRỌNG: Giữ lại route Auth
 
 // --- KẾT NỐI MONGO ATLAS ---
-// Lấy chuỗi kết nối từ file .env
-const MONGO_URI = process.env.MONGO_URI; 
+const MONGO_URI = process.env.MONGO_URI;
 
 if (!MONGO_URI) {
-    console.error('❌ MONGO_URI is not defined. Add MONGO_URI to your .env or set the env var.');
-    console.error('Example .env line:\nMONGO_URI=mongodb+srv://user:pass@cluster0.mongodb.net/?retryWrites=true&w=majority');
-    process.exit(1);
+    console.error("❌ LỖI: Thiếu MONGO_URI trong file .env!");
+    process.exit(1);
 }
 
-// Thêm tên database 'groupDB' vào chuỗi kết nối một cách an toàn
+// **GIỮ LOGIC XỬ LÝ URL AN TOÀN TỪ NHÁNH DATABASE**
 const DB_URL_WITH_NAME = MONGO_URI.includes('/?')
-    ? MONGO_URI.replace('/?', '/groupDB?')
-    : (MONGO_URI.includes('?')
-        ? MONGO_URI.replace('?', 'groupDB?')
-        : (MONGO_URI.endsWith('/') ? `${MONGO_URI}groupDB` : `${MONGO_URI}/groupDB`));
+    ? MONGO_URI.replace('/?', '/groupDB?')
+    : (MONGO_URI.includes('?')
+        ? MONGO_URI.replace('?', 'groupDB?')
+        : (MONGO_URI.endsWith('/') ? `${MONGO_URI}groupDB` : `${MONGO_URI}/groupDB`));
+
+
+console.log('Đang kết nối tới MongoDB Atlas...');
 
 mongoose.connect(DB_URL_WITH_NAME)
-    .then(() => {
-        console.log('🔗 Connected to MongoDB Atlas!');
-        
-        // 🛣️ Dùng route /users
-        // CHỈ khởi động server khi kết nối DB thành công
-        app.use('/users', userRoutes); 
+    .then(() => {
+        // KẾT NỐI THÀNH CÔNG
+        console.log('🔗 Connected to MongoDB Atlas!');
+        
+        // 4. Dùng route
+        app.use('/users', userRoutes);
+        app.use('/auth', authRoutes); // <--- QUAN TRỌNG: Giữ lại route Auth
 
-        // Cổng chạy server
-        const PORT = process.env.PORT || 3000;
-
-        // Khởi động server
+        // 5. Khởi động server (CHỈ SAU KHI KẾT NỐI DB)
+        const PORT = process.env.PORT || 3000;
+        // Giữ nguyên logic listen cho mạng ngoài ('0.0.0.0')
+        app.listen(PORT,'0.0.0.0', () => { 
+            console.log(`✅ Server running on http://localhost:${PORT}`);
+        });
+    })
+    .catch((error) => {
+        // KẾT NỐI THẤT BẠI
+        console.error('❌ Connection failed!', error.message);
+    });
         app.listen(PORT, () => {
             console.log(`✅ Server running on http://localhost:${PORT}`);
         });
     })
     .catch((error) => {
-        console.error('❌ Connection failed!', error);
+        // KẾT NỐI THẤT BẠI
+        console.error('❌ Connection failed!', error.message);
     });
-

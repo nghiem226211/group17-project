@@ -1,48 +1,56 @@
 // backend/controllers/userController.js
 
 // 1. Nhúng Model User (kết nối với MongoDB)
-const User = require('../models/User');
+const User = require('../models/User'); 
 
 // GET: Lấy toàn bộ danh sách user (từ MongoDB)
-const getUsers = async (req, res) => {
-    try {
-        // Lấy tất cả user từ database
-        const users = await User.find();
-        res.status(200).json(users);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
+exports.getUsers = async (req, res) => { // CHỌN 'exports.getUsers'
+    try {
+        // Lấy tất cả user từ database
+        const users = await User.find();
+        res.status(200).json(users);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
 };
 
-// POST: Thêm user mới (vào MongoDB)
-const createUser = async (req, res) => {
-    // Lấy name, email từ body của Postman
-    const { name, email } = req.body;
+// POST: Thêm user mới (HĐ 5)
+exports.createUser = async (req, res) => {
+    const { name, email } = req.body;
+    try {
+        const user = await User.create({ name, email });
+        res.status(201).json(user);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+}; 
 
-    try {
-        // Tạo user mới bằng Model 'User' và lưu vào MongoDB
-        const user = await User.create({ name, email });
-        res.status(201).json(user); // Trả về user (sẽ có _id)
+// PUT: Sửa user (HĐ 7)
+exports.updateUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updatedUser = await User.findByIdAndUpdate(id, req.body, { new: true });
 
-    } catch (error) {
-        // Lỗi thường gặp: email trùng lặp hoặc thiếu trường required
-        res.status(400).json({ message: error.message });
-    }
+        if (!updatedUser) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        res.status(200).json(updatedUser);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
 };
 
-// 2. Thêm các hàm trống cho Hoạt động 7 (sẽ làm sau)
-const updateUser = (req, res) => {
-    res.send('Update user (chưa làm)');
-};
-const deleteUser = (req, res) => {
-    res.send('Delete user (chưa làm)');
-};
+// DELETE: Xóa user (HĐ 7)
+exports.deleteUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const deletedUser = await User.findByIdAndDelete(id);
 
-
-// 3. Xuất các hàm
-module.exports = {
-    getUsers,
-    createUser,
-    updateUser, // Sẽ cần cho HĐ 7
-    deleteUser  // Sẽ cần cho HĐ 7
+        if (!deletedUser) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        res.status(200).json({ message: "User deleted" });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
 };
