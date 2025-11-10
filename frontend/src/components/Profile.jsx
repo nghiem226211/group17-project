@@ -20,9 +20,13 @@ const Profile = () => {
             setLoading(false);
             return;
         }
+
         try {
+            // Gửi token lên Backend qua header Authorization
             const response = await axios.get("http://localhost:3000/auth/profile", {
-                headers: { 'Authorization': `Bearer ${token}` }
+                headers: {
+                    'Authorization': `Bearer ${token}` // <--- GỬI TOKEN BẢO MẬT
+                }
             });
             setUser(response.data);
             setName(response.data.name);
@@ -39,7 +43,9 @@ const Profile = () => {
         e.preventDefault();
         try {
             await axios.put("http://localhost:3000/auth/profile", { name, email }, {
-                headers: { 'Authorization': `Bearer ${token}` }
+                headers: {
+                    'Authorization': `Bearer ${token}` // <--- GỬI TOKEN BẢO MẬT
+                }
             });
             alert('Cập nhật thành công!');
             fetchProfile(); 
