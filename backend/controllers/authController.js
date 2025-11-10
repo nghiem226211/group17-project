@@ -1,34 +1,26 @@
-// backend/controllers/authController.js
-const User = require('../models/user');
-const bcryptjs = require('bcryptjs'); // Nhúng thư viện mã hóa
-const jwt = require('jsonwebtoken'); // Nhúng thư viện JWT
+// backend/controllers/authController.js (Fixed Reset Password)
 
-// --- API ĐĂNG KÝ (SIGN UP) --- 
+const User = require('../models/user');
+const bcryptjs = require('bcryptjs'); 
+const jwt = require('jsonwebtoken'); 
+const crypto = require('crypto');
+
+// --- API ĐĂNG KÝ (SIGN UP) ---
 exports.signup = async (req, res) => {
     try {
-        // 1. Lấy name, email, password từ request body
         const { name, email, password } = req.body;
-
-        // 2. Kiểm tra email đã tồn tại chưa 
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(400).json({ message: "Email đã tồn tại." });
         }
-
-        // 3. Mã hóa mật khẩu 
-        const salt = await bcryptjs.genSalt(10); // Tạo "muối"
-        const hashedPassword = await bcryptjs.hash(password, salt); // Băm mật khẩu
-
-        // 4. Tạo user mới
+        const salt = await bcryptjs.genSalt(10);
+        const hashedPassword = await bcryptjs.hash(password, salt);
         const user = await User.create({
             name,
             email,
-            password: hashedPassword, // Lưu mật khẩu đã mã hóa
+            password: hashedPassword,
         });
-
-        // 5. Trả về thành công
         res.status(201).json({ message: "Tạo tài khoản thành công!", userId: user._id });
-
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -37,42 +29,29 @@ exports.signup = async (req, res) => {
 // --- API ĐĂNG NHẬP (LOGIN) ---
 exports.login = async (req, res) => {
     try {
-        // 1. Lấy email và password từ request
         const { email, password } = req.body;
-
-        // 2. Kiểm tra email có tồn tại không
         const user = await User.findOne({ email });
         if (!user) {
             return res.status(404).json({ message: "Email không tồn tại." });
         }
-
-        // 3. So sánh mật khẩu
         const isMatch = await bcryptjs.compare(password, user.password);
         if (!isMatch) {
             return res.status(400).json({ message: "Mật khẩu không chính xác." });
         }
-
-        // 4. Tạo JWT Token
-        // Gói 'id' và 'role' của user vào token
         const payload = {
             id: user._id,
             role: user.role
         };
-
-        // Ký token với một "khóa bí mật" (đặt trong .env)
         const token = jwt.sign(
             payload,
-            process.env.JWT_SECRET, // Bạn phải thêm khóa này vào .env
-            { expiresIn: '1h' } // Token hết hạn sau 1 giờ
+            process.env.JWT_SECRET,
+            { expiresIn: '1h' }
         );
-
-        // 5. Trả về token cho client
         res.status(200).json({
             message: "Đăng nhập thành công!",
             token: token,
             user: { id: user._id, name: user.name, email: user.email, role: user.role }
         });
-
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -80,45 +59,25 @@ exports.login = async (req, res) => {
 
 // --- API ĐĂNG XUẤT (LOGOUT) ---
 exports.logout = (req, res) => {
-    // Về cơ bản, backend chỉ cần xác nhận
-    // Việc xóa token sẽ do client (React) xử lý
     res.status(200).json({ message: "Đăng xuất thành công!" });
 };
 
 // --- API XEM THÔNG TIN CÁ NHÂN (GET PROFILE) ---
-// Sẽ được bảo vệ bởi middleware
 exports.getProfile = async (req, res) => {
-    // req.user đã được middleware 'protect' gắn vào từ token
-    const user = await User.findById(req.user.id);
-
-    if (user) {
-        res.status(200).json({
-            id: user._id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-        });
-    } else {
-        res.status(404).json({ message: 'Không tìm thấy người dùng' });
-    }
+    res.status(200).json(req.user);
 };
 
 // --- API CẬP NHẬT THÔNG TIN CÁ NHÂN (UPDATE PROFILE) ---
 exports.updateProfile = async (req, res) => {
     const user = await User.findById(req.user.id);
-
     if (user) {
-        user.name = req.body.name || user.name; // Cập nhật tên nếu có
-        user.email = req.body.email || user.email; // Cập nhật email nếu có
-
-        // Nếu người dùng muốn đổi mật khẩu
+        user.name = req.body.name || user.name;
+        user.email = req.body.email || user.email;
         if (req.body.password) {
-            const salt = await bcrypt.genSalt(10);
-            user.password = await bcrypt.hash(req.body.password, salt);
+            const salt = await bcryptjs.genSalt(10);
+            user.password = await bcryptjs.hash(req.body.password, salt);
         }
-
-        const updatedUser = await user.save(); // Lưu lại vào DB
-
+        const updatedUser = await user.save();
         res.status(200).json({
             id: updatedUser._id,
             name: updatedUser.name,
@@ -127,5 +86,141 @@ exports.updateProfile = async (req, res) => {
         });
     } else {
         res.status(404).json({ message: 'Không tìm thấy người dùng' });
+    }
+};
+
+// --- API QUÊN MẬT KHẨU (FORGOT PASSWORD) - ⭐ FIXED ---
+exports.forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ message: 'Nếu email tồn tại, link reset sẽ được gửi.' });
+        }
+
+        // ⭐ Tạo token ngẫu nhiên (40 ký tự hex)
+        const resetToken = crypto.randomBytes(20).toString('hex');
+        
+        // ⭐ Hash token trước khi lưu vào DB
+        const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+        
+        user.resetPasswordToken = hashedToken;
+        user.resetPasswordExpires = Date.now() + 10 * 60 * 1000; // 10 phút
+        await user.save();
+
+        // ⭐ QUAN TRỌNG: Gửi RAW TOKEN (chưa hash) cho user
+        const resetURL = `http://localhost:3001/reset-password/${resetToken}`;
+        
+        console.log(`\n\n--- [MOCK EMAIL SENT] ---`);
+        console.log(`To: ${email}`);
+        console.log(`Reset URL: ${resetURL}`);
+        console.log(`Token (Copy vào frontend): ${resetToken}`);
+        console.log(`Token (Đã hash trong DB): ${hashedToken}`);
+        console.log(`Expires: ${new Date(user.resetPasswordExpires)}`);
+        console.log(`-------------------------\n`);
+
+        res.status(200).json({ 
+            message: 'Nếu email tồn tại, link reset đã được gửi thành công.',
+            // ⭐ Trong môi trường DEV, có thể trả token về để test
+            // NHỚ XÓA DÒNG NÀY KHI PRODUCTION!
+            devToken: resetToken 
+        });
+    } catch (err) {
+        console.error("Lỗi forgotPassword:", err);
+        res.status(500).json({ message: 'Lỗi server khi xử lý quên mật khẩu.' });
+    }
+};
+
+// --- API ĐỔI MẬT KHẨU (RESET PASSWORD) - ⭐ FIXED ---
+exports.resetPassword = async (req, res) => {
+    try {
+        const { token } = req.params;
+        const { newPassword } = req.body;
+
+        // ⭐ CRITICAL: Trim token để loại bỏ khoảng trắng/xuống dòng
+        const cleanToken = token.trim();
+        
+        // ⭐ Hash token từ URL (giống như lúc lưu)
+        const hashedToken = crypto.createHash('sha256').update(cleanToken).digest('hex');
+
+        console.log(`\n--- [DEBUG RESET PASSWORD] ---`);
+        console.log(`Token nhận được: "${token}"`);
+        console.log(`Token sau trim: "${cleanToken}"`);
+        console.log(`Token đã hash: ${hashedToken}`);
+        console.log(`Thời gian hiện tại: ${new Date()}`);
+        
+        // ⭐ Tìm user với token đã hash
+        const user = await User.findOne({
+            resetPasswordToken: hashedToken,
+            resetPasswordExpires: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            console.log(`❌ Không tìm thấy user với token này`);
+            
+            // Debug: Tìm user có token bất kỳ để so sánh
+            const anyUser = await User.findOne({ 
+                resetPasswordToken: { $exists: true, $ne: null } 
+            });
+            
+            if (anyUser) {
+                console.log(`Token trong DB: ${anyUser.resetPasswordToken}`);
+                console.log(`Token expires: ${anyUser.resetPasswordExpires}`);
+                console.log(`Email: ${anyUser.email}`);
+            }
+            
+            return res.status(400).json({ 
+                message: 'Token không hợp lệ hoặc đã hết hạn.',
+                debug: {
+                    receivedToken: cleanToken,
+                    hashedToken: hashedToken
+                }
+            });
+        }
+
+        console.log(`✅ Tìm thấy user: ${user.email}`);
+
+        // ⭐ Hash mật khẩu mới
+        const salt = await bcryptjs.genSalt(10);
+        user.password = await bcryptjs.hash(newPassword, salt);
+        
+        // ⭐ Xóa token reset
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpires = undefined;
+
+        await user.save();
+        
+        console.log(`✅ Đổi mật khẩu thành công cho ${user.email}`);
+        console.log(`------------------------------\n`);
+        
+        res.status(200).json({ message: 'Mật khẩu đã được đặt lại thành công.' });
+    } catch (err) {
+        console.error("Lỗi resetPassword:", err);
+        res.status(500).json({ message: 'Lỗi server khi xử lý đổi mật khẩu.' });
+    }
+};
+
+// --- API UPLOAD AVATAR ---
+exports.uploadAvatar = async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+        if (!user) {
+            return res.status(404).json({ message: 'Không tìm thấy người dùng' });
+        }
+        
+        if (req.file && req.file.path) {
+            user.avatar = req.file.path;
+            await user.save();
+            
+            res.status(200).json({
+                message: 'Upload Avatar thành công!',
+                avatarUrl: user.avatar
+            });
+        } else {
+            res.status(400).json({ message: 'Không tìm thấy file ảnh để upload' });
+        }
+    } catch (err) {
+        console.error("Lỗi Upload:", err);
+        res.status(500).json({ message: 'Lỗi server khi upload avatar.' });
     }
 };
